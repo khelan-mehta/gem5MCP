@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>gem5-MCP Report</title>
+<style>
+  @page {
+    size: A4;
+    margin: 2.3cm 2.4cm 2.2cm 2.4cm;
+    @bottom-center { content: counter(page); font-family: "Times New Roman", serif; font-size: 10.5pt; }
+  }
+  @page :first { @bottom-center { content: none; } }
+  @page cover { @bottom-center { content: none; } }
+
+  html { counter-reset: page 0; }
+  body {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 12pt; line-height: 1.45; color: #000; background: #fff; margin: 0;
+    text-align: justify; hyphens: auto;
+  }
+  .cover { page: cover; text-align: center; }
+  .cover img.logo { width: 250px; margin-top: 0; }
+  .cover h1 { font-size: 21pt; font-weight: bold; line-height: 1.3; margin: 30px 20px 20px; }
+  .cover .names { font-size: 13pt; line-height: 1.55; }
+  .cover .names span.roll { display: inline-block; width: 90px; text-align: left; margin-left: 18px; }
+  .cover .names span.nm { display: inline-block; width: 150px; text-align: left; }
+  .cover .course { font-style: italic; font-size: 12.5pt; margin-top: 16px; }
+  .cover .date { font-size: 12.5pt; margin-top: 4px; }
+  .abstract { text-align: justify; margin-top: 22px; font-size: 11.5pt; line-height: 1.4; }
+  .abstract h2 { margin-top: 0; }
+  .abstract h2 { text-align: left; }
+  .kw { margin-top: 10px; }
+
+  h2 { font-size: 16pt; font-weight: bold; margin: 22px 0 10px; page-break-after: avoid; break-after: avoid; }
+  h3 { font-size: 13pt; font-weight: bold; margin: 18px 0 8px; page-break-after: avoid; break-after: avoid; }
+  h4 { font-size: 12pt; font-weight: bold; margin: 12px 0 6px; break-after: avoid; }
+  h2 .n { margin-right: 14px; }
+  h3 .n { margin-right: 12px; }
+  p { margin: 0 0 9px; }
+  ul, ol { margin: 4px 0 10px; padding-left: 26px; }
+  li { margin-bottom: 5px; }
+  .newpage { break-before: page; }
+  code, .mono { font-family: "Courier New", Consolas, monospace; font-size: 10.5pt; }
+
+  figure { margin: 16px 0 14px; text-align: center; break-inside: avoid; }
+  figure img { max-width: 82%; }
+  figure img.wide { max-width: 100%; border: 1px solid #999; }
+  figcaption { font-size: 11pt; margin-top: 6px; text-align: center; }
+
+  table.t { border-collapse: collapse; margin: 10px auto 4px; font-size: 11pt; break-inside: avoid; }
+  table.t th, table.t td { border: 1px solid #000; padding: 3px 12px; text-align: center; }
+  table.t th { font-weight: bold; }
+  table.t td.l, table.t th.l { text-align: left; }
+  .tcap { text-align: center; font-size: 11pt; margin: 4px 0 16px; }
+  .tblock { break-inside: avoid; }
+
+  pre {
+    font-family: "Courier New", Consolas, monospace; font-size: 9pt; line-height: 1.3;
+    background: #f6f6f6; border: 1px solid #ccc; padding: 8px 10px; white-space: pre-wrap;
+    text-align: left; margin: 6px 0 14px;
+  }
+  .refs li { margin-bottom: 6px; }
+  svg text { font-family: "Times New Roman", serif; }
+</style>
+</head>
+<body>
+
+<!-- ============================== COVER ============================== -->
+<section class="cover">
+  <img class="logo" src="figs/nirma_logo.png" alt="Nirma University, Institute of Technology">
+  <h1>gem5-MCP: An LLM-Driven Framework for Microarchitectural Design-Space Exploration of Modern Processors using the gem5 Simulator</h1>
+  <div class="names">
+    <div><span class="nm"><b>K</b>helan Mehta</span><span class="roll"><b>2</b>3BEC088</span></div>
+    <div><span class="nm"><b>R</b>iya Upadhyay</span><span class="roll"><b>2</b>3BEC164</span></div>
+  </div>
+  <div class="course">Course: 4EC502ME25 - Modern Processor Architecture</div>
+  <div class="date">Semester VII</div>
+  <div class="date">September 28, 2026</div>
+
+  <div class="abstract">
+    <h2>Abstract</h2>
+    <p>This report presents <i>gem5-MCP</i>, a Model Context Protocol (MCP) server that allows a large language model (LLM) such as Claude to configure, launch, monitor and interpret gem5 simulations through validated tool calls, together with a web dashboard for side-by-side comparison. Using the framework, 97 simulations (31 experiment groups) were executed on the X86, RISC-V and ARM ISAs in syscall-emulation mode on gem5 v25.1. Increasing the L1 data cache from 4&nbsp;kB to 64&nbsp;kB cut the matrix-multiplication miss rate from 12.01% to 0.02% and raised IPC by 36.3%, while an AES SubBytes workload was completely insensitive to capacity. At a fixed 16&nbsp;kB, moving from direct-mapped to 8-way associativity improved IPC by 37.9%. On the core side, the out-of-order O3CPU achieved 5.0&times; the IPC of an in-order core on an ILP-rich kernel, and enlarging the reorder buffer from 16 to 192 entries improved IPC by 52.5% before saturating. Built-in validation microbenchmarks confirmed that the simulated memory hierarchy and pipeline behave as configured.</p>
+    <p class="kw"><b>Keywords:</b> gem5 Simulator, Model Context Protocol, Out-of-Order Execution, Reorder Buffer, Superscalar Width, Cache Associativity, IPC, Instruction Set Architecture, X86, RISC-V, ARM.</p>
+  </div>
+</section>
+
+<!-- ============================== 1. LITERATURE ============================== -->
+<section class="newpage">
+<h2><span class="n">1</span>Literature Survey</h2>
+<p>Modern high-performance processors rely on two broad strategies to keep execution units busy: exploiting instruction-level parallelism (ILP) inside the core, and hiding the ever-growing gap between processor and DRAM speed (the "memory wall") with a multi-level cache hierarchy.</p>
+<ul>
+  <li><b>Out-of-Order and Superscalar Execution:</b> Tomasulo's algorithm introduced dynamic scheduling with register renaming; modern cores extend this with a reorder buffer (ROB), load/store queues and multi-wide fetch, issue and commit stages, so independent instructions can execute while older ones stall [1], [2].</li>
+  <li><b>Cache Hierarchy and the Three C's:</b> Cache misses are classified as compulsory, capacity and conflict misses. Capacity, associativity, block size, replacement policy and hardware prefetching are the principal levers designers use to trade silicon area and latency against miss rate [1].</li>
+  <li><b>ISA Effects (CISC vs. RISC):</b> The same high-level program compiles to different instruction counts and mixes on X86, ARM and RISC-V; overall performance is the product of instruction count, CPI and cycle time, so no single metric decides which ISA is "faster" [1], [2].</li>
+  <li><b>Architectural Simulation:</b> gem5 is a modular, cycle-level simulator offering several CPU models (Atomic, TimingSimple, Minor in-order pipeline and the detailed O3 out-of-order core) and a configurable memory system, and is the de-facto research and teaching platform for processor design-space exploration [3], [4].</li>
+  <li><b>LLMs and Tool Protocols in Hardware Design:</b> Recent work has applied large language models to chip design assistance and RTL generation [6], [7]. The Model Context Protocol (MCP) [5] standardises how an LLM client discovers and calls external tools, making it possible to expose an engineering tool such as gem5 to an AI assistant in a controlled way.</li>
+</ul>
+
+<h2><span class="n">2</span>Limitations of Available Technology</h2>
+<p>Although gem5 is extremely capable, several practical barriers limit how quickly students and designers can use it for design-space exploration:</p>
+<ul>
+  <li><b>No Programmatic API:</b> gem5 is a command-line binary driven by an arbitrary Python configuration script. Every experiment requires hand-editing scripts and flags, which is slow and error-prone; allowing an AI agent to write raw Python would also be unsafe.</li>
+  <li><b>Long-Running, Filesystem-Heavy Runs:</b> Detailed (O3) simulations take from seconds to hours and write results as a flat <span class="mono">stats.txt</span> file with thousands of lines, which must be searched manually to extract IPC, CPI and miss rates.</li>
+  <li><b>Cross-ISA Comparison Overhead:</b> Comparing X86, ARM and RISC-V requires separate gem5 builds, cross-compilers and statically-linked binaries for each ISA, and repeating each experiment by hand.</li>
+  <li><b>Platform Barrier:</b> gem5 only builds on Linux/macOS, so Windows users must maintain a separate Linux environment (e.g. WSL) and copy results back and forth.</li>
+  <li><b>No Guard-rails for Interpretation:</b> Nothing in the stock workflow checks whether results are sensible; a mis-configured cache or CPU silently produces misleading numbers.</li>
+</ul>
+</section>
+
+<!-- ============================== 3. METHODOLOGY ============================== -->
+<section>
+<h2><span class="n">3</span>Proposed Methodology</h2>
+<p>We designed and implemented <b>gem5-MCP</b>, a Python MCP server that wraps gem5 as a safe, asynchronous simulation service. An LLM client (Claude) or the accompanying web dashboard submits experiments as validated parameter sets; the server compiles the workload for each target ISA, runs gem5 inside WSL Ubuntu&nbsp;24.04, parses the statistics and returns normalised metrics.</p>
+
+<h3><span class="n">3.1</span>System Architecture</h3>
+<figure>
+<svg width="600" height="330" viewBox="0 0 600 330" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#000"/></marker></defs>
+  <g font-size="13" text-anchor="middle">
+    <rect x="30" y="10" width="240" height="46" fill="#e8eef9" stroke="#000"/>
+    <text x="150" y="30" font-weight="bold">LLM Client (Claude)</text><text x="150" y="47" font-size="11">natural-language requests</text>
+    <rect x="330" y="10" width="240" height="46" fill="#e8eef9" stroke="#000"/>
+    <text x="450" y="30" font-weight="bold">Web Dashboard</text><text x="450" y="47" font-size="11">FastAPI + Chart.js</text>
+    <line x1="150" y1="56" x2="230" y2="92" stroke="#000" marker-end="url(#ar)"/>
+    <line x1="450" y1="56" x2="370" y2="92" stroke="#000" marker-end="url(#ar)"/>
+    <text x="165" y="82" font-size="10.5">MCP (stdio)</text><text x="440" y="82" font-size="10.5">HTTP / JSON</text>
+    <rect x="60" y="94" width="480" height="104" fill="#fff6e0" stroke="#000"/>
+    <text x="300" y="112" font-weight="bold">gem5-MCP Server (Windows, Python)</text>
+    <g font-size="11">
+      <rect x="72" y="122" width="108" height="30" fill="#fff" stroke="#000"/><text x="126" y="141">Pydantic validation</text>
+      <rect x="188" y="122" width="108" height="30" fill="#fff" stroke="#000"/><text x="242" y="141">Cross-compiler</text>
+      <rect x="304" y="122" width="108" height="30" fill="#fff" stroke="#000"/><text x="358" y="141">Async job pool (4)</text>
+      <rect x="420" y="122" width="108" height="30" fill="#fff" stroke="#000"/><text x="474" y="141">Stats parser</text>
+      <rect x="130" y="160" width="160" height="30" fill="#fff" stroke="#000"/><text x="210" y="179">SQLite job / run store</text>
+      <rect x="310" y="160" width="160" height="30" fill="#fff" stroke="#000"/><text x="390" y="179">Labs &amp; validation</text>
+    </g>
+    <line x1="300" y1="198" x2="300" y2="232" stroke="#000" marker-end="url(#ar)"/>
+    <text x="400" y="220" font-size="10.5">wsl.exe -u gem5 -- gem5.opt &lt;template&gt;.py</text>
+    <rect x="60" y="234" width="480" height="84" fill="#e6f4ea" stroke="#000"/>
+    <text x="300" y="252" font-weight="bold">WSL Ubuntu 24.04 - gem5 v25.1.0.1</text>
+    <g font-size="11">
+      <rect x="72" y="262" width="140" height="46" fill="#fff" stroke="#000"/><text x="142" y="281">gem5.opt builds</text><text x="142" y="297">X86 | RISCV | ARM</text>
+      <rect x="230" y="262" width="140" height="46" fill="#fff" stroke="#000"/><text x="300" y="281">Fixed config templates</text><text x="300" y="297">SE single / multi-core</text>
+      <rect x="388" y="262" width="140" height="46" fill="#fff" stroke="#000"/><text x="458" y="281">m5out/stats.txt</text><text x="458" y="297">per-job output dir</text>
+    </g>
+  </g>
+</svg>
+<figcaption>Figure 1: gem5-MCP System Architecture</figcaption>
+</figure>
+
+<p>The key design decisions that address the limitations of Section 2 are:</p>
+<ol>
+  <li><b>Job pattern instead of blocking calls:</b> <span class="mono">submit_simulation</span> returns a <span class="mono">job_id</span> immediately; the client polls <span class="mono">get_job_status</span> / <span class="mono">get_comparison</span>. A bounded pool runs at most four gem5 processes concurrently, with output-size (512&nbsp;MB) and time (2&nbsp;h) caps.</li>
+  <li><b>No raw Python:</b> the model selects one of a fixed set of trusted gem5 configuration templates and supplies parameters that are type-checked by Pydantic and passed as <span class="mono">argv</span>, never string-interpolated.</li>
+  <li><b>Structured results:</b> <span class="mono">stats.txt</span> is parsed into a dictionary and reduced to a normalised metric set (instructions, cycles, IPC, CPI, L1I/L1D/L2 miss rates) comparable across ISAs.</li>
+  <li><b>Automatic cross-compilation:</b> C/C++ source is compiled statically with <span class="mono">gcc</span>, <span class="mono">riscv64-linux-gnu-gcc</span> or <span class="mono">aarch64-linux-gnu-gcc</span> and cached by content hash.</li>
+  <li><b>Built-in validation:</b> self-consistency microbenchmarks (in-order vs. out-of-order IPC, and an L1&rarr;L2&rarr;DRAM latency ladder) return a pass/fail verdict.</li>
+</ol>
+
+<div class="tblock">
+<table class="t">
+  <tr><th class="l">MCP Tool</th><th class="l">Function</th></tr>
+  <tr><td class="l mono">submit_simulation</td><td class="l">Launch one validated run &rarr; job_id</td></tr>
+  <tr><td class="l mono">compare_source_across_isas</td><td class="l">Compile once per ISA, run all, compare</td></tr>
+  <tr><td class="l mono">run_parameter_sweep</td><td class="l">Vary one hardware knob (cache size, assoc., ROB, width ...)</td></tr>
+  <tr><td class="l mono">run_cpu_sweep</td><td class="l">Same program on atomic / timing / minor / o3 CPUs</td></tr>
+  <tr><td class="l mono">get_comparison / get_stats</td><td class="l">Live status, normalised metrics, filtered raw stats</td></tr>
+  <tr><td class="l mono">run_validation</td><td class="l">IPC and memory-ladder self-consistency checks</td></tr>
+  <tr><td class="l mono">run_lab / explain_lab</td><td class="l">Guided course labs with explanation prompts</td></tr>
+  <tr><td class="l mono">list_checkpoints / restore_from_checkpoint</td><td class="l">Checkpoint reuse for long runs</td></tr>
+</table>
+<div class="tcap">Table 1: Principal tools exposed by the gem5-MCP server</div>
+</div>
+
+<h3><span class="n">3.2</span>Simulated System Configuration</h3>
+<div class="tblock">
+<table class="t">
+  <tr><th class="l">Parameter</th><th class="l">Baseline value</th></tr>
+  <tr><td class="l">Simulator / mode</td><td class="l">gem5 v25.1.0.1, Syscall-Emulation (SE), single core</td></tr>
+  <tr><td class="l">ISAs</td><td class="l">X86, RISC-V (RV64), ARM (AArch64)</td></tr>
+  <tr><td class="l">CPU models</td><td class="l">AtomicSimpleCPU, TimingSimpleCPU, MinorCPU, O3CPU</td></tr>
+  <tr><td class="l">Core clock</td><td class="l">1 GHz</td></tr>
+  <tr><td class="l">L1 I-cache / D-cache</td><td class="l">32 kB, 8-way, LRU (each)</td></tr>
+  <tr><td class="l">L1D prefetcher / MSHRs</td><td class="l">Stride prefetcher / 16</td></tr>
+  <tr><td class="l">L2 cache (unified)</td><td class="l">256 kB, 4-way, LRU</td></tr>
+  <tr><td class="l">Cache line size</td><td class="l">64 B</td></tr>
+  <tr><td class="l">Main memory</td><td class="l">512 MB, DDR3-1600 (single channel)</td></tr>
+  <tr><td class="l">O3 pipeline</td><td class="l">gem5 defaults (8-wide, 192-entry ROB) unless swept</td></tr>
+</table>
+<div class="tcap">Table 2: Baseline simulated system (parameters varied per experiment)</div>
+</div>
+
+<h3><span class="n">3.3</span>Experiments</h3>
+<p>All experiments below were issued through the MCP tools (or the dashboard, which calls the same backend) and every reported number is taken directly from the stored gem5 statistics.</p>
+<ol>
+  <li><b>L1D Capacity:</b> 100&times;100 integer matrix multiplication on X86/TimingSimpleCPU with L1D = 4, 32, 64&nbsp;kB.</li>
+  <li><b>Workload Sensitivity:</b> AES SubBytes over a 150&nbsp;kB payload (50 iterations) at the same three capacities.</li>
+  <li><b>Associativity:</b> matrix multiplication with L1D fixed at 16&nbsp;kB and 1-way, 2-way, 8-way mapping.</li>
+  <li><b>CPU Microarchitecture:</b> Atomic vs. Timing vs. Minor vs. O3 on a branch-heavy kernel and on a 4-chain ILP kernel.</li>
+  <li><b>Out-of-Order Resources:</b> O3 sweeps of ROB entries (16&ndash;192), fetch width (1&ndash;8) and issue width (1&ndash;8).</li>
+  <li><b>ISA Comparison:</b> identical C source (recursive Fibonacci, branch kernel, matrix multiply) on X86, RISC-V and ARM.</li>
+  <li><b>Validation:</b> dependent pointer-chase with working sets resident in L1 (16&nbsp;kB), L2 (128&nbsp;kB) and DRAM (8&nbsp;MB).</li>
+</ol>
+</section>
+
+<!-- ============================== 4. FLOW CHART ============================== -->
+<section class="newpage">
+<h2><span class="n">4</span>Flow Chart</h2>
+<figure>
+<svg width="560" height="760" viewBox="0 0 560 760" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#000"/></marker></defs>
+  <g font-size="13" text-anchor="middle" stroke-width="1.2">
+    <rect x="195" y="8" width="170" height="38" rx="19" fill="#d9e7ff" stroke="#000"/><text x="280" y="32" font-weight="bold">Start</text>
+    <line x1="280" y1="46" x2="280" y2="66" stroke="#000" marker-end="url(#a2)"/>
+    <rect x="140" y="68" width="280" height="46" fill="#fff" stroke="#000"/><text x="280" y="88">User prompt to Claude / dashboard</text><text x="280" y="105" font-size="11">(C source, ISAs, CPU model, knob to sweep)</text>
+    <line x1="280" y1="114" x2="280" y2="134" stroke="#000" marker-end="url(#a2)"/>
+    <rect x="140" y="136" width="280" height="46" fill="#fff" stroke="#000"/><text x="280" y="156">MCP tool call</text><text x="280" y="173" font-size="11">(e.g. run_parameter_sweep / compare_source_across_isas)</text>
+    <line x1="280" y1="182" x2="280" y2="200" stroke="#000" marker-end="url(#a2)"/>
+    <polygon points="280,202 380,244 280,286 180,244" fill="#fff6e0" stroke="#000"/><text x="280" y="240">Parameters</text><text x="280" y="256">valid?</text>
+    <line x1="380" y1="244" x2="470" y2="244" stroke="#000"/><text x="408" y="236" font-size="11">No</text>
+    <rect x="430" y="246" width="120" height="44" fill="#fde2e2" stroke="#000"/><text x="490" y="265" font-size="11">Return error to</text><text x="490" y="281" font-size="11">LLM to correct</text>
+    <line x1="490" y1="246" x2="490" y2="159" stroke="#000"/><line x1="490" y1="159" x2="422" y2="159" stroke="#000" marker-end="url(#a2)"/>
+    <line x1="280" y1="286" x2="280" y2="306" stroke="#000" marker-end="url(#a2)"/><text x="294" y="300" font-size="11">Yes</text>
+    <rect x="140" y="308" width="280" height="46" fill="#fff" stroke="#000"/><text x="280" y="328">Cross-compile static binary per ISA</text><text x="280" y="345" font-size="11">(gcc / riscv64-gcc / aarch64-gcc, cached)</text>
+    <line x1="280" y1="354" x2="280" y2="374" stroke="#000" marker-end="url(#a2)"/>
+    <rect x="140" y="376" width="280" height="46" fill="#fff" stroke="#000"/><text x="280" y="396">Create job(s), store in SQLite</text><text x="280" y="413" font-size="11">queue in bounded async pool (max 4)</text>
+    <line x1="280" y1="422" x2="280" y2="442" stroke="#000" marker-end="url(#a2)"/>
+    <rect x="140" y="444" width="280" height="46" fill="#e6f4ea" stroke="#000"/><text x="280" y="464">Run gem5.opt + config template</text><text x="280" y="481" font-size="11">in WSL (SE mode), write m5out/stats.txt</text>
+    <line x1="280" y1="490" x2="280" y2="510" stroke="#000" marker-end="url(#a2)"/>
+    <rect x="140" y="512" width="280" height="46" fill="#fff" stroke="#000"/><text x="280" y="532">Parse stats.txt &#8594; normalised metrics</text><text x="280" y="549" font-size="11">(IPC, CPI, cycles, L1/L2 miss rates)</text>
+    <line x1="280" y1="558" x2="280" y2="576" stroke="#000" marker-end="url(#a2)"/>
+    <polygon points="280,578 380,620 280,662 180,620" fill="#fff6e0" stroke="#000"/><text x="280" y="616">All runs in</text><text x="280" y="632">sweep done?</text>
+    <line x1="180" y1="620" x2="70" y2="620" stroke="#000"/><text x="150" y="612" font-size="11">No</text>
+    <line x1="70" y1="620" x2="70" y2="467" stroke="#000"/><line x1="70" y1="467" x2="138" y2="467" stroke="#000" marker-end="url(#a2)"/>
+    <text x="52" y="545" font-size="11" transform="rotate(-90 52 545)">poll get_comparison</text>
+    <line x1="280" y1="662" x2="280" y2="682" stroke="#000" marker-end="url(#a2)"/><text x="294" y="676" font-size="11">Yes</text>
+    <rect x="140" y="684" width="280" height="40" fill="#fff" stroke="#000"/><text x="280" y="709">Charts on dashboard + LLM explanation</text>
+    <line x1="280" y1="724" x2="280" y2="738" stroke="#000"/>
+    <rect x="215" y="738" width="130" height="20" rx="10" fill="#d9e7ff" stroke="#000"/><text x="280" y="753" font-weight="bold" font-size="12">End</text>
+  </g>
+</svg>
+<figcaption>Figure 2: Simulation Flowchart of the gem5-MCP Framework</figcaption>
+</figure>
+<p>The process begins with a natural-language request (e.g. <i>"sweep the L1D associativity at 16&nbsp;kB for this matrix multiply and explain the result"</i>). Claude translates it into a validated MCP tool call; the server compiles the workload, fans out one gem5 job per configuration, and returns a <span class="mono">comparison_id</span> that is polled until all runs finish. The collected metrics are then charted and interpreted.</p>
+
+<figure>
+  <img class="wide" src="figs/dashboard.png" alt="gem5 Architecture Lab dashboard">
+  <figcaption>Figure 3: Web dashboard ("gem5 Architecture Lab") sharing the MCP backend</figcaption>
+</figure>
+</section>
+
+<!-- ============================== 5. RESULTS ============================== -->
+<section class="newpage">
+<h2><span class="n">5</span>Simulation Results</h2>
+
+<h3><span class="n">5.1</span>Experiment 1: L1 Data Cache Size (Capacity)</h3>
+<div class="tblock">
+<table class="t">
+  <tr><th>L1 Data Cache Size</th><th>Cycles</th><th>IPC (Speed)</th><th>L1D Miss Rate</th></tr>
+  <tr><td>4kB</td><td>18,304,743</td><td>0.451</td><td>12.01%</td></tr>
+  <tr><td>32kB</td><td>13,778,227</td><td>0.599</td><td>0.90%</td></tr>
+  <tr><td>64kB</td><td>13,428,291</td><td>0.615</td><td>0.02%</td></tr>
+</table>
+<div class="tcap">Table 3: Impact of Capacity on Matrix Multiplication (X86, TimingSimpleCPU, 8.25M instructions)</div>
+</div>
+<figure><img src="figs/e1_ipc.png"><figcaption>Figure 4: L1 Cache Size vs. IPC</figcaption></figure>
+<figure><img src="figs/e1_miss.png"><figcaption>Figure 5: L1 Cache Size vs. Miss Rate</figcaption></figure>
+
+<h3><span class="n">5.2</span>Experiment 2: Workload Sensitivity (AES Cryptography)</h3>
+<div class="tblock">
+<table class="t">
+  <tr><th>L1 Data Cache Size</th><th>Cycles</th><th>IPC (Speed)</th><th>L1D Miss Rate</th></tr>
+  <tr><td>4kB</td><td>83,217,718</td><td>0.546</td><td>0.01%</td></tr>
+  <tr><td>32kB</td><td>83,216,284</td><td>0.546</td><td>0.01%</td></tr>
+  <tr><td>64kB</td><td>83,216,253</td><td>0.546</td><td>0.01%</td></tr>
+</table>
+<div class="tcap">Table 4: Impact of Capacity on AES SubBytes (X86, TimingSimpleCPU, 45.4M instructions)</div>
+</div>
+<figure><img src="figs/e2_ipc.png"><figcaption>Figure 6: L1 Cache Size vs. IPC for AES (flat response)</figcaption></figure>
+
+<h3><span class="n">5.3</span>Experiment 3: Mapping Schemes (Associativity at 16kB)</h3>
+<div class="tblock">
+<table class="t">
+  <tr><th>Associativity (16kB Cache)</th><th>Cycles</th><th>IPC (Speed)</th><th>L1D Miss Rate</th></tr>
+  <tr><td>1-Way (Direct Mapped)</td><td>19,005,513</td><td>0.434</td><td>12.90%</td></tr>
+  <tr><td>2-Way Set Associative</td><td>18,534,551</td><td>0.445</td><td>12.87%</td></tr>
+  <tr><td>8-Way Set Associative</td><td>13,779,992</td><td>0.599</td><td>0.90%</td></tr>
+</table>
+<div class="tcap">Table 5: Impact of Cache Associativity on Matrix Multiplication</div>
+</div>
+<figure><img src="figs/e3_ipc.png"><figcaption>Figure 7: Associativity vs. IPC</figcaption></figure>
+<figure><img src="figs/e3_miss.png"><figcaption>Figure 8: Associativity vs. Miss Rate</figcaption></figure>
+
+<h3><span class="n">5.4</span>Experiment 4: CPU Microarchitecture (In-order vs. Out-of-order)</h3>
+<div class="tblock">
+<table class="t">
+  <tr><th>CPU Model</th><th>Pipeline Type</th><th>Branch kernel IPC</th><th>ILP kernel IPC</th></tr>
+  <tr><td>AtomicSimpleCPU</td><td>Functional, atomic memory</td><td>0.423</td><td>0.521</td></tr>
+  <tr><td>TimingSimpleCPU</td><td>In-order, non-pipelined</td><td>0.666</td><td>0.746</td></tr>
+  <tr><td>MinorCPU</td><td>In-order, 4-stage pipeline</td><td>0.274</td><td>&ndash;</td></tr>
+  <tr><td>O3CPU</td><td>Out-of-order superscalar</td><td>0.981</td><td>3.732</td></tr>
+</table>
+<div class="tcap">Table 6: CPU model comparison on X86 (branch kernel: 0.98M instr.; ILP kernel: 12.1M instr.)</div>
+</div>
+<figure><img src="figs/e4_cpu.png"><figcaption>Figure 9: CPU Model vs. IPC on a data-dependent branch kernel</figcaption></figure>
+<figure><img src="figs/e4_ilp.png"><figcaption>Figure 10: CPU Model vs. IPC on an ILP-rich kernel (four independent accumulator chains)</figcaption></figure>
+
+<h3><span class="n">5.5</span>Experiment 5: Out-of-Order Core Resources</h3>
+<div class="tblock">
+<table class="t">
+  <tr><th>ROB Entries</th><th>16</th><th>32</th><th>64</th><th>128</th><th>192</th></tr>
+  <tr><td>Cycles</td><td>1,526,930</td><td>1,163,744</td><td>1,022,279</td><td>1,002,286</td><td>1,001,216</td></tr>
+  <tr><td>IPC</td><td>0.644</td><td>0.844</td><td>0.961</td><td>0.980</td><td>0.981</td></tr>
+</table>
+<div class="tcap">Table 7: Reorder-buffer sweep (X86 O3CPU, fetch/issue width 8, branch kernel)</div>
+</div>
+<div class="tblock">
+<table class="t">
+  <tr><th>Width</th><th>1</th><th>2</th><th>4</th><th>8</th></tr>
+  <tr><td>IPC vs. fetch width (branch kernel)</td><td>0.383</td><td>0.617</td><td>0.824</td><td>0.981</td></tr>
+  <tr><td>IPC vs. issue width (matrix mult.)</td><td>0.531</td><td>1.055</td><td>&ndash;</td><td>2.661</td></tr>
+</table>
+<div class="tcap">Table 8: Superscalar width sweeps (X86 O3CPU)</div>
+</div>
+<figure><img src="figs/e5_rob.png"><figcaption>Figure 11: ROB Size vs. IPC</figcaption></figure>
+<figure><img src="figs/e5_fetch.png"><figcaption>Figure 12: Fetch Width vs. IPC</figcaption></figure>
+<figure><img src="figs/e5_issue.png"><figcaption>Figure 13: Issue Width vs. IPC</figcaption></figure>
+
+<h3><span class="n">5.6</span>Experiment 6: ISA Comparison (X86 vs. RISC-V vs. ARM)</h3>
+<div class="tblock">
+<table class="t">
+  <tr><th>Workload / CPU</th><th>ISA</th><th>Instructions</th><th>Cycles</th><th>CPI</th><th>IPC</th></tr>
+  <tr><td rowspan="3">fib(30)<br>TimingSimpleCPU</td><td>X86</td><td>23,890,502</td><td>38,712,831</td><td>1.620</td><td>0.617</td></tr>
+  <tr><td>RISC-V</td><td>23,575,212</td><td>32,605,260</td><td>1.383</td><td>0.723</td></tr>
+  <tr><td>ARM</td><td>23,657,424</td><td>28,697,769</td><td>1.213</td><td>0.824</td></tr>
+  <tr><td rowspan="3">Branch kernel<br>O3CPU</td><td>X86</td><td>982,552</td><td>1,001,216</td><td>1.019</td><td>0.981</td></tr>
+  <tr><td>RISC-V</td><td>818,435</td><td>798,964</td><td>0.976</td><td>1.024</td></tr>
+  <tr><td>ARM</td><td>916,895</td><td>791,355</td><td>0.863</td><td>1.159</td></tr>
+  <tr><td rowspan="2">Matrix mult.<br>O3CPU</td><td>X86</td><td>4,381,900</td><td>1,899,665</td><td>0.434</td><td>2.307</td></tr>
+  <tr><td>RISC-V</td><td>7,326,245</td><td>2,357,018</td><td>0.322</td><td>3.108</td></tr>
+</table>
+<div class="tcap">Table 9: Same C source compiled and simulated on three ISAs</div>
+</div>
+<figure><img src="figs/e6_isa.png"><figcaption>Figure 14: IPC across ISAs</figcaption></figure>
+<figure><img src="figs/e6_matmul.png"><figcaption>Figure 15: Matrix multiplication cycles, X86 vs. RISC-V on three CPU models</figcaption></figure>
+
+<h3><span class="n">5.7</span>Experiment 7: Memory-Hierarchy Validation</h3>
+<div class="tblock">
+<table class="t">
+  <tr><th>Working Set</th><th>Cycles</th><th>CPI</th><th>L1D Miss Rate</th><th>L2 Miss Rate</th></tr>
+  <tr><td>16 kB (fits L1)</td><td>8,285,374</td><td>1.349</td><td>0.02%</td><td>54.47%*</td></tr>
+  <tr><td>128 kB (fits L2)</td><td>13,463,555</td><td>2.164</td><td>18.93%</td><td>0.05%</td></tr>
+  <tr><td>8 MB (DRAM)</td><td>67,843,677</td><td>5.702</td><td>33.14%</td><td>76.98%</td></tr>
+</table>
+<div class="tcap">Table 10: Pointer-chase latency ladder (X86, TimingSimpleCPU). *Only a handful of compulsory L2 accesses.</div>
+</div>
+<figure><img src="figs/e7_ladder.png"><figcaption>Figure 16: CPI vs. Working-set Size</figcaption></figure>
+<p>Both automated validation checks returned <b>PASS</b>: (i) O3 IPC (3.731) &gt; in-order IPC (0.746) and O3 IPC &gt; 1.2; (ii) cycles strictly increase L1 &lt; L2 &lt; DRAM.</p>
+</section>
+
+<!-- ============================== 6. ANALYSIS ============================== -->
+<section>
+<h2><span class="n">6</span>Analysis of Obtained Results</h2>
+<p><b>1. Mitigating Capacity Misses:</b> In the <i>i-j-k</i> matrix multiplication the inner loop walks a column of <span class="mono">mat2</span> with a 400-byte stride, touching 100 distinct cache lines (&asymp;6.4&nbsp;kB) that are reused across consecutive values of <i>j</i>. A 4&nbsp;kB L1D cannot hold this set, giving a 12.01% miss rate. At 32&nbsp;kB the set fits and misses fall to 0.90%; at 64&nbsp;kB the full 120&nbsp;kB working set is almost captured (0.02%, essentially compulsory misses). IPC rose by 36.3% and cycles fell by 26.6%, with diminishing returns beyond 32&nbsp;kB.</p>
+<p><b>2. Algorithmic Sensitivity:</b> The AES SubBytes kernel was completely insensitive to capacity: cycles changed by only 1,465 out of 83.2 million (&lt;0.002%). The 256-byte S-Box fits trivially in even a 4&nbsp;kB cache, and the 150&nbsp;kB payload is streamed sequentially, a pattern the stride prefetcher hides almost perfectly. Adding cache therefore buys nothing; this workload is limited by the in-order core's execution rate, not by memory.</p>
+<p><b>3. Mitigating Conflict Misses:</b> At a fixed 16&nbsp;kB, direct-mapped and 2-way caches both miss &asymp;12.9% of the time because the strided column lines map onto a small number of sets and evict each other. Moving to 8-way reduced misses 14&times; to 0.90% and improved IPC by 37.9%. Notably, the 16&nbsp;kB 8-way cache matched the 32&nbsp;kB 8-way cache of Experiment 1 (IPC 0.5988 vs. 0.5989), showing that the "capacity" loss at small sizes was largely a <i>conflict</i> problem that associativity alone can solve.</p>
+<p><b>4. In-order vs. Out-of-order:</b> On the ILP kernel with four independent dependency chains, O3CPU reached an IPC of 3.73, a 5.0&times; improvement over the in-order TimingSimpleCPU (0.75), because register renaming and a 192-entry ROB allow several chains to issue each cycle. On the branch kernel, whose branches depend on random data, the gain is only 1.47&times; (0.98 vs. 0.67): frequent mispredictions flush the speculative window. The pipelined MinorCPU scored lowest (0.27) because each misprediction costs a pipeline refill, while the non-pipelined TimingSimpleCPU never speculates. AtomicSimpleCPU is a functional model with approximate memory latency and should not be used for performance conclusions.</p>
+<p><b>5. Out-of-order Resources:</b> Enlarging the ROB from 16 to 64 entries raised IPC from 0.64 to 0.96 (+49%); going to 192 entries added only 2% more, so the window saturates once it covers the branch-resolution latency. Fetch width scaled IPC 2.56&times; from 1 to 8 on the branch kernel, and issue width scaled IPC 5.0&times; (0.53 &rarr; 2.66) on the matrix multiply, whose independent multiply-accumulates provide abundant ILP. These trends reproduce the classic ILP wall: extra width and window pay off only as far as the workload's parallelism and branch predictability allow.</p>
+<p><b>6. ISA Effects:</b> For recursive Fibonacci all three ISAs executed nearly the same number of instructions (&plusmn;1.3%), yet ARM needed 25.9% fewer cycles than X86 and RISC-V 15.8% fewer, reflecting X86's micro-op expansion of push/pop/call sequences and memory-operand instructions. On the matrix multiplication, RISC-V executed 67% more instructions than X86 because X86 folds loads into arithmetic instructions with complex addressing; RISC-V's simpler instructions achieved a higher O3 IPC (3.11 vs. 2.31) but still took 24% more cycles. This confirms that execution time = IC &times; CPI &times; cycle time, and neither instruction count nor IPC alone decides ISA efficiency.</p>
+<p><b>7. Memory Hierarchy Validation:</b> With the arithmetic held constant, CPI rose from 1.35 (L1-resident) to 2.16 (L2-resident) to 5.70 (DRAM-resident), i.e. 4.2&times; slower when data spills to DRAM. Because each load depends on the previous one, neither out-of-order execution nor the prefetcher can hide this latency. The ladder, together with the IPC check, gives confidence that the configured caches and cores behave as intended.</p>
+<p><b>8. Framework Effectiveness:</b> All 97 simulation jobs (78 X86, 14 RISC-V, 5 ARM; 34 on O3CPU) completed without failure, using about 27 minutes of total host time. Each multi-run sweep was triggered by a single MCP tool call, with compilation, queueing, statistics parsing and charting handled automatically, replacing a workflow that would otherwise need dozens of manual script edits and command invocations.</p>
+</section>
+
+<!-- ============================== 7. CONCLUSION ============================== -->
+<section>
+<h2><span class="n">7</span>Conclusion</h2>
+<p>This project shows that exposing gem5 through a validated Model Context Protocol server turns a CLI-only research simulator into an interactive design-space exploration tool that an AI assistant or a student can drive safely. The experiments reproduce the central lessons of modern processor architecture. Cache capacity and associativity must be matched to the workload's access pattern: an 8-way 16&nbsp;kB L1D performed as well as a 32&nbsp;kB one, while streaming cryptographic code gained nothing from extra cache. Out-of-order execution delivers large IPC gains (up to 5&times;) only when the program exposes ILP and predictable control flow, and ROB and width returns saturate quickly. ISA comparisons must weigh instruction count and CPI together. Future work includes full-system Linux boots, multi-core coherence studies, branch-predictor exploration and power/area estimation (e.g. McPAT) so that the framework can report performance-per-watt alongside IPC.</p>
+</section>
+
+<!-- ============================== 8. REFERENCES ============================== -->
+<section>
+<h2><span class="n">8</span>References</h2>
+<ol class="refs">
+  <li>Hennessy, J. L., &amp; Patterson, D. A. (2017). <i>Computer Architecture: A Quantitative Approach</i> (6th ed.). Morgan Kaufmann.</li>
+  <li>Shen, J. P., &amp; Lipasti, M. H. (2013). <i>Modern Processor Design: Fundamentals of Superscalar Processors</i>. Waveland Press.</li>
+  <li>Binkert, N., et al. (2011). "The gem5 simulator". <i>ACM SIGARCH Computer Architecture News</i>, 39(2), 1&ndash;7.</li>
+  <li>Lowe-Power, J., et al. (2020). "The gem5 Simulator: Version 20.0+". arXiv:2007.03152.</li>
+  <li>Anthropic (2024). <i>Model Context Protocol Specification</i>. https://modelcontextprotocol.io</li>
+  <li>Liu, M., et al. (2023). "ChipNeMo: Domain-Adapted LLMs for Chip Design". arXiv:2311.00176.</li>
+  <li>Blocklove, J., Garg, S., Karri, R., &amp; Pearce, H. (2023). "Chip-Chat: Challenges and Opportunities in Conversational Hardware Design". <i>ACM/IEEE MLCAD</i>.</li>
+  <li>Tomasulo, R. M. (1967). "An Efficient Algorithm for Exploiting Multiple Arithmetic Units". <i>IBM Journal of Research and Development</i>, 11(1), 25&ndash;33.</li>
+</ol>
+</section>
+
+<!-- ============================== APPENDIX ============================== -->
+<section class="newpage">
+<h2>Appendix: Code</h2>
+
+<h4>A. MCP Tool Definition (server/main.py, excerpt)</h4>
+<pre>@mcp.tool()
+async def run_parameter_sweep(
+    source: str, isa: str, axis: str, values: list[Any],
+    cpu: str = "timing", language: str = "c",
+    base_params: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Sweep one hardware parameter across values and compare (e.g. cache-size study).
+    axis: l1d_size, l1d_assoc, l2_size, rob_entries, fetch_width, issue_width, ...
+    base_params: fixed params held across all runs, e.g. {"l1d_size":"16kB"}.
+    Poll the returned comparison_id with get_comparison to chart the effect."""
+    try:
+        return await comparisons.create_sweep(
+            source=source, language=language, isa=isa, axis=axis, values=values,
+            cpu=cpu, base_params=base_params)
+    except Exception as exc:
+        return {"error": f"{type(exc).__name__}: {exc}"}</pre>
+
+<h4>B. Validated Parameter Schema (server/templates.py, excerpt)</h4>
+<pre>class _Base(BaseModel):
+    model_config = {"extra": "forbid"}          # unknown keys are rejected
+    isa: Literal["X86", "RISCV", "ARM"]
+    cpu: Literal["atomic", "timing", "o3", "minor"] = "timing"
+    clock: str = "1GHz"
+    l1d_size: str = "32kB";   l1d_assoc: int = Field(8, ge=1, le=64)
+    l2_size: str = "256kB";   l2_assoc: int = Field(4, ge=1, le=64)
+    prefetcher: Literal["none","stride","tagged","ampm","bop","dcpt"] = "stride"
+    dram_type: Literal["ddr3_1600","ddr4_2400","lpddr3_1600","hbm", ...] = "ddr3_1600"
+    rob_entries: int | None = Field(None, ge=8, le=1024)    # O3 only
+    fetch_width: int | None = Field(None, ge=1, le=16)      # O3 only
+    issue_width: int | None = Field(None, ge=1, le=16)      # O3 only</pre>
+
+<h4>C. Example Tool Call (Experiment 3)</h4>
+<pre>run_parameter_sweep(
+    source   = &lt;matrix_mul.c&gt;,
+    isa      = "X86",
+    cpu      = "timing",
+    axis     = "l1d_assoc",
+    values   = [1, 2, 8],
+    base_params = {"l1d_size": "16kB"})
+# -&gt; {"comparison_id": "cmp_e2b870510f", "jobs": 3}
+# Each job is launched as:
+wsl.exe -d Ubuntu-24.04 -u gem5 -- bash -lc \
+  "gem5/build/X86/gem5.opt --outdir=/home/gem5/gem5mcp-runs/&lt;job_id&gt;/m5out \
+   templates/se_single_core.py --isa X86 --cpu timing --l1d_size 16kB --l1d_assoc 1 ..."</pre>
+
+<h4>D. Benchmark Code (matrix_mul.c)</h4>
+<pre>#include &lt;stdio.h&gt;
+#define N 100
+void multiply(int mat1[][N], int mat2[][N], int res[][N]) {
+    int i, j, k;
+    for (i = 0; i &lt; N; i++)
+        for (j = 0; j &lt; N; j++) {
+            res[i][j] = 0;
+            for (k = 0; k &lt; N; k++)
+                res[i][j] += mat1[i][k] * mat2[k][j];
+        }
+}
+int main() {
+    static int mat1[N][N], mat2[N][N], res[N][N];
+    for (int i = 0; i &lt; N; i++)
+        for (int j = 0; j &lt; N; j++) { mat1[i][j] = i + j; mat2[i][j] = i - j; }
+    multiply(mat1, mat2, res);
+    printf("checksum=%d\n", res[N-1][N-1]);
+    return 0;
+}</pre>
+
+<h4>E. Benchmark Code (AES SubBytes, abridged)</h4>
+<pre>#define PAYLOAD_SIZE 150000   /* 150 kB payload */
+#define ITERATIONS   50       /* continuous streaming */
+static const uint8_t sbox[256] = { 0x63,0x7c,0x77,0x7b, ... ,0xbb,0x16 };
+void aes_sub_bytes(uint8_t *data, int length) {
+    for (int i = 0; i &lt; length; i++)
+        data[i] = sbox[data[i]];          /* scattered S-Box lookup */
+}
+int main() {
+    uint8_t *payload = malloc(PAYLOAD_SIZE);
+    for (int i = 0; i &lt; PAYLOAD_SIZE; i++) payload[i] = i % 256;
+    for (int it = 0; it &lt; ITERATIONS; it++) aes_sub_bytes(payload, PAYLOAD_SIZE);
+    printf("Final byte check: %x\n", payload[PAYLOAD_SIZE - 1]);
+    free(payload);  return 0;
+}</pre>
+
+<h4>F. Microbenchmarks (branch kernel, ILP kernel, pointer chase)</h4>
+<pre>/* Branch kernel: data-dependent, unpredictable branches */
+static unsigned char a[8192];
+for (i = 0; i &lt; N; i++) { s = s*1103515245u + 12345u; a[i] = (s&gt;&gt;16) &amp; 0xFF; }
+for (r = 0; r &lt; 16; r++) for (i = 0; i &lt; N; i++)
+    if (a[i] &gt;= 128) { __asm__ __volatile__("" ::: "memory"); acc += a[i]; }
+
+/* ILP kernel: four independent accumulator chains */
+for (long i = 0; i &lt; 1000000L; i++) { a += i; b += i ^ 1; c += i ^ 2; d += i ^ 3; }
+
+/* Pointer chase: N = 4096 / 32768 / 2097152 ints (16 kB / 128 kB / 8 MB) */
+for (long i = 0; i &lt; N; i++) nxt[i] = (int)((i + 131) % N);
+for (long s = 0; s &lt; 2000000L; s++) i = nxt[i];      /* dependent loads */</pre>
+
+<h4>G. Running the Server</h4>
+<pre># Install (Windows host; gem5 pre-built inside WSL Ubuntu-24.04)
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+# MCP server (stdio) for Claude Desktop / Claude Code
+.\.venv\Scripts\python.exe -m server.main
+# Web dashboard at http://127.0.0.1:8000
+.\.venv\Scripts\python.exe -m web.app</pre>
+</section>
+
+</body>
+</html>

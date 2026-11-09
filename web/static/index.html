@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gem5 Architecture Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="/static/chart.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">g5</span>
+      <div>
+        <h1>gem5 Architecture Lab</h1>
+        <p id="subtitle">Compile, simulate and compare across CPU architectures.</p>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button class="tab on" data-view="compare">Compare</button>
+      <button class="tab" data-view="labs">Course labs</button>
+      <button class="tab" data-view="validate">Validation</button>
+    </nav>
+    <div id="meta-badge" class="badge">connecting…</div>
+  </header>
+
+  <main>
+    <!-- LEFT: swaps by tab -->
+    <section class="panel left">
+      <!-- Compare view -->
+      <div id="view-compare" class="view">
+        <h2>1 &nbsp;Program</h2>
+        <div class="row">
+          <label>Language <select id="language"></select></label>
+          <button id="example-btn" class="ghost" type="button">Load Fibonacci example</button>
+        </div>
+        <textarea id="source" spellcheck="false" rows="16"></textarea>
+
+        <h2>2 &nbsp;Architectures</h2>
+        <div id="isa-list" class="chips"></div>
+
+        <h2>3 &nbsp;CPU model</h2>
+        <select id="cpu"></select>
+
+        <details id="adv" class="adv">
+          <summary>4 &nbsp;Advanced hardware knobs &nbsp;<span class="adv-hint">(optional)</span></summary>
+
+          <div class="adv-group">
+            <div class="adv-title">Caches</div>
+            <div class="adv-grid">
+              <label>L1D size <input id="k_l1d_size" placeholder="32kB"></label>
+              <label>L1D assoc <input id="k_l1d_assoc" type="number" placeholder="8"></label>
+              <label>L2 size <input id="k_l2_size" placeholder="256kB"></label>
+              <label>L2 assoc <input id="k_l2_assoc" type="number" placeholder="4"></label>
+              <label>L1D repl <select id="k_l1d_repl"></select></label>
+              <label>L2 repl <select id="k_l2_repl"></select></label>
+              <label>Prefetcher <select id="k_prefetcher"></select></label>
+              <label>L1D MSHRs <input id="k_l1d_mshrs" type="number" placeholder="16"></label>
+              <label>Line size <select id="k_cache_line_size"></select></label>
+            </div>
+          </div>
+
+          <div class="adv-group">
+            <div class="adv-title">Memory</div>
+            <div class="adv-grid">
+              <label>DRAM type <select id="k_dram_type"></select></label>
+              <label>Mem size <input id="k_mem_size" placeholder="512MB"></label>
+              <label>Clock <input id="k_clock" placeholder="1GHz"></label>
+            </div>
+          </div>
+
+          <div class="adv-group">
+            <div class="adv-title">Out-of-order pipeline <span class="adv-hint">(needs CPU = o3)</span></div>
+            <div class="adv-grid">
+              <label>ROB entries <input id="k_rob_entries" type="number" placeholder="default"></label>
+              <label>Fetch width <input id="k_fetch_width" type="number" placeholder="default"></label>
+              <label>Issue width <input id="k_issue_width" type="number" placeholder="default"></label>
+              <label>Commit width <input id="k_commit_width" type="number" placeholder="default"></label>
+              <label>LQ entries <input id="k_lq_entries" type="number" placeholder="default"></label>
+              <label>SQ entries <input id="k_sq_entries" type="number" placeholder="default"></label>
+              <label>Int phys regs <input id="k_phys_int_regs" type="number" placeholder="default"></label>
+            </div>
+          </div>
+          <button id="reset-adv" class="ghost" type="button">Reset knobs</button>
+        </details>
+
+        <button id="run-btn" class="primary" type="button">Run comparison ▶</button>
+        <div id="submit-msg" class="msg"></div>
+      </div>
+
+      <!-- Labs view -->
+      <div id="view-labs" class="view hidden">
+        <h2>Guided labs</h2>
+        <p class="lead">Pick a lab. It runs a real gem5 experiment, then you analyse the
+          result (or ask Claude to, with the “explain” prompt).</p>
+        <div id="lab-list" class="lab-list"></div>
+        <div id="lab-detail" class="lab-detail hidden"></div>
+      </div>
+
+      <!-- Validation view -->
+      <div id="view-validate" class="view hidden">
+        <h2>Self-consistency validation</h2>
+        <p class="lead">These aren’t claims of silicon accuracy — they check the
+          simulator behaves as its configuration says it must.</p>
+        <label>ISA <select id="val-isa"></select></label>
+        <div class="val-cards">
+          <div class="val-card">
+            <h3>Out-of-order really works</h3>
+            <p>In-order vs OoO IPC on a benchmark with known parallelism. OoO must win.</p>
+            <button class="primary" data-val="ipc" type="button">Run IPC check ▶</button>
+          </div>
+          <div class="val-card">
+            <h3>The cache hierarchy is real</h3>
+            <p>Pointer-chase over L1/L2/DRAM working sets. Cycles must climb each level.</p>
+            <button class="primary" data-val="memory" type="button">Run memory check ▶</button>
+          </div>
+        </div>
+        <div id="val-msg" class="msg"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: shared results -->
+    <section class="panel results">
+      <div class="results-head">
+        <h2 id="results-title">Results</h2>
+        <div id="progress" class="badge muted">idle</div>
+      </div>
+
+      <div id="verdict" class="verdict hidden"></div>
+      <div id="status-cards" class="status-cards"></div>
+
+      <div id="charts" class="charts hidden">
+        <div class="chart-box"><canvas id="chart-cycles"></canvas></div>
+        <div class="chart-box"><canvas id="chart-insts"></canvas></div>
+        <div class="chart-box"><canvas id="chart-cpi"></canvas></div>
+        <div class="chart-box"><canvas id="chart-miss"></canvas></div>
+      </div>
+
+      <div id="table-wrap" class="hidden">
+        <h3>Raw metrics</h3>
+        <table id="metrics-table"></table>
+      </div>
+
+      <p class="hint">Tip: ask Claude — “run the out-of-order vs in-order lab and explain the result”.</p>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
